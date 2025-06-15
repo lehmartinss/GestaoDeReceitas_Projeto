@@ -25,16 +25,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.senai.sp.jandira.gestaodereceitas.R
-import br.senai.sp.jandira.gestaodereceitas.model.Login // Importar a classe Login
-import br.senai.sp.jandira.gestaodereceitas.model.LoginApiResponse // Importar a classe LoginApiResponse
-import br.senai.sp.jandira.gestaodereceitas.service.RetrofitFactory // Importar RetrofitFactory
-import br.senai.sp.jandira.gestaodereceitas.service.SharedPreferencesUtils
+import br.senai.sp.jandira.gestaodereceitas.model.Login
+import br.senai.sp.jandira.gestaodereceitas.model.LoginApiResponse
+import br.senai.sp.jandira.gestaodereceitas.service.RetrofitFactory
+import br.senai.sp.jandira.gestaodereceitas.service.SharedPreferencesUtils // Certifique-se de que este import está correto
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-@OptIn(ExperimentalMaterial3Api::class) // Anotação para usar ExperimentalMaterial3Api
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaLogin(navController: NavController?) {
 
@@ -160,7 +160,7 @@ fun TelaLogin(navController: NavController?) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = { navController?.navigate("RecuperarSenha") }) { // Corrigido para "RecuperarSenha" conforme MainActivity
+                    TextButton(onClick = { navController?.navigate("RecuperarSenha") }) {
                         Text(text = stringResource(R.string.esqueceu_senha), color = Color(0xFF982829), fontSize = 15.sp)
                     }
                 }
@@ -169,12 +169,11 @@ fun TelaLogin(navController: NavController?) {
 
                 Button(
                     onClick = {
-                        // Lógica de login via API
                         val login = Login(email.value.trim(), senha.value.trim())
 
                         val call = RetrofitFactory()
                             .getCadastroService()
-                            .inserir(login) // Chamada ao método inserir do CadastroService
+                            .inserir(login) // Chamada ao método inserir do CadastroService (provavelmente deveria ser 'login' se houver um específico)
 
                         call.enqueue(object : Callback<LoginApiResponse> {
                             override fun onResponse(
@@ -186,15 +185,23 @@ fun TelaLogin(navController: NavController?) {
                                     Log.i("API_LOGIN", "Resposta do login: $apiResponse")
 
                                     if (apiResponse != null && apiResponse.userList.isNotEmpty()) {
-                                        val userId = apiResponse.userList[0].id
+                                        val loggedInUser = apiResponse.userList[0] // Obtém o primeiro usuário da lista
 
-                                        if (userId != null && userId > 0) {
-                                            // Salvar o ID do usuário no SharedPreferences
-                                            SharedPreferencesUtils.saveUserId(context, userId)
+                                        if (loggedInUser.id != null && loggedInUser.id > 0) {
+                                            // ****** PONTO DE ALTERAÇÃO: SALVAR TODOS OS DADOS DO USUÁRIO *******
+                                            SharedPreferencesUtils.saveUserData(
+                                                context = context,
+                                                userId = loggedInUser.id, // ID do usuário
+                                                userName = loggedInUser.nome_usuario, // Nome do usuário
+                                                userEmail = loggedInUser.email // Email do usuário
+                                            )
+                                            // *******************************************************************
+
                                             val testId = SharedPreferencesUtils.getUserId(context)
-                                            Log.i("API_LOGIN", "ID salvo: $userId, ID recuperado para teste: $testId")
+                                            val testName = SharedPreferencesUtils.getUserName(context)
+                                            val testEmail = SharedPreferencesUtils.getUserEmail(context)
+                                            Log.i("API_LOGIN", "ID salvo: $testId, Nome salvo: $testName, Email salvo: $testEmail")
 
-                                            // Navegar para a tela Home e limpar a back stack
                                             navController?.navigate("home") {
                                                 popUpTo("login") { inclusive = true }
                                             }

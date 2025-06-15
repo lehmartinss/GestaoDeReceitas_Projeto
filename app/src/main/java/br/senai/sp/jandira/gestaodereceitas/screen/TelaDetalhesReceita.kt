@@ -172,7 +172,7 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Classificação
-                        val classificacaoNome = currentReceita.classificacoes_detalhe?.firstOrNull()?.nome ?:
+                        val classificacaoNome = currentReceita.classificacoes_detalhe?.firstOrNull()?.id_classificacao ?:
                         currentReceita.classificacao_nome ?: "N/A"
                         Text(
                             text = stringResource(R.string.classificacao_dois_pontos, classificacaoNome),

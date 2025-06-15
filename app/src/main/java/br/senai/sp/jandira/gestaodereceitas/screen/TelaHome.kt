@@ -292,7 +292,7 @@ fun TelaHome(navController: NavController?) {
 @Composable
 fun ReceitaCard(receita: Receita, classificacoesDisponiveis: List<ClassificacaoReceita>) {
     val classificacaoExibida = receita.classificacao_nome ?:
-    (receita.classificacao_ids?.firstOrNull()?.let { id -> // `classificacao_ids` é nulável
+    (receita.classificacao?.firstOrNull()?.let { id -> // `classificacao_ids` é nulável
         // CORREÇÃO AQUI: Usar 'it.id_classificacao'
         classificacoesDisponiveis.find { it.id_classificacao == id }?.nome
     } ?: "N/A")

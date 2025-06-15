@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1092629193548",
+    "project_id": "projeto-final-front",
+    "storage_bucket": "projeto-final-front.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1092629193548:android:d3cc4825c589d6c92665e9",
+        "android_client_info": {
+          "package_name": "br.senai.sp.jandira.gestaodereceitas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvD4Ai9Ta0ebslxSA-afQfLg-juxz20sY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

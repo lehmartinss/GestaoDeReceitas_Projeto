@@ -3,8 +3,8 @@ package br.senai.sp.jandira.gestaodereceitas.model
 import com.google.gson.annotations.SerializedName
 
 data class RespostaReceita(
-    @SerializedName("status") val status: String, // Ou Boolean, dependendo da sua API
-    @SerializedName("message") val message: String,
-    @SerializedName("receita") val receita: Receita? // Se a API retorna a receita criada/atualizada
-    // Adicione outros campos se a API retornar
+    @SerializedName("status") val status: Boolean,
+    @SerializedName("status_code") val statusCode: Int,
+    @SerializedName("mensagem") val mensagem: String,
+    @SerializedName("receita") val receita: Receita? // Pode retornar a receita criada com o ID gerado
 )
