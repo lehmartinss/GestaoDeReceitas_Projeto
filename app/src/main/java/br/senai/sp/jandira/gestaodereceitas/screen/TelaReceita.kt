@@ -28,9 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.navigation.NavController
-import br.senai.sp.jandira.gestaodereceitas.model.ClassificacaoReceita
+import br.senai.sp.jandira.gestaodereceitas.model.ClassificacaoReceita // Importar o modelo correto
 import br.senai.sp.jandira.gestaodereceitas.R
 import br.senai.sp.jandira.gestaodereceitas.firebase.FirebaseStorageService
+import br.senai.sp.jandira.gestaodereceitas.model.ClassificacaoReceitaEnvio
 import br.senai.sp.jandira.gestaodereceitas.model.Receita
 import br.senai.sp.jandira.gestaodereceitas.model.RespostaReceita
 import br.senai.sp.jandira.gestaodereceitas.service.RetrofitFactory
@@ -54,22 +55,52 @@ fun TelaReceita(navController: NavController?) {
     val dificuldade = remember { mutableStateOf("") }
     val tempo_preparo = remember { mutableStateOf("") }
     val categoriaNomeSelecionada = remember { mutableStateOf("") }
-    val categoriaIdSelecionada = remember { mutableIntStateOf(0) }
+    val categoriaIdSelecionada = remember { mutableIntStateOf(0) } // Usado para armazenar o ID INT da categoria
     val expanded = remember { mutableStateOf(false) }
     val dificuldadeExpandid = remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val isLoading = remember { mutableStateOf(false) }
 
-    val classificacoesDisponiveis = listOf(
-        ClassificacaoReceita(21, "DOCE"),
-        ClassificacaoReceita(22, "SALGADO"),
-        ClassificacaoReceita(23, "CARNE"),
-        ClassificacaoReceita(24, "AVE"),
-        ClassificacaoReceita(25, "PEIXE"),
-        ClassificacaoReceita(26, "SEM GLÚTEN"),
-        ClassificacaoReceita(27, "SEM LACTOSE")
-    )
+    // Listagem de classificações (categorias) para o dropdown
+    // Usando ClassificacaoReceita que tem 'id' e 'nome' para o menu
+    val classificacoesDisponiveis = remember {
+        mutableStateListOf(
+            ClassificacaoReceita(id = 21, nome = "DOCE"),
+            ClassificacaoReceita(id = 22, nome = "SALGADO"),
+            ClassificacaoReceita(id = 23, nome = "CARNE"),
+            ClassificacaoReceita(id = 24, nome = "AVE"),
+            ClassificacaoReceita(id = 25, nome = "PEIXE"),
+            ClassificacaoReceita(id = 26, nome = "SEM GLÚTEN"),
+            ClassificacaoReceita(id = 27, nome = "SEM LACTOSE")
+        )
+    }
+
+    // Você também pode carregar as classificações do backend aqui,
+    // como você fez na TelaHome, para garantir que estejam atualizadas.
+    // Exemplo:
+    /*
+    val context = LocalContext.current // Já definido abaixo
+    LaunchedEffect(Unit) {
+        RetrofitFactory().getCadastroService().listarTodasClassificacoes().enqueue(object : Callback<RespostaClassificacao> {
+            override fun onResponse(call: Call<RespostaClassificacao>, response: Response<RespostaClassificacao>) {
+                if (response.isSuccessful) {
+                    response.body()?.classificacoes?.let {
+                        classificacoesDisponiveis.clear()
+                        classificacoesDisponiveis.addAll(it)
+                    }
+                } else {
+                    Log.e("TelaReceita", "Erro ao carregar classificações: ${response.code()} - ${response.errorBody()?.string()}")
+                }
+            }
+            override fun onFailure(call: Call<RespostaClassificacao>, t: Throwable) {
+                Log.e("TelaReceita", "Erro de rede ao carregar classificações: ${t.message}")
+            }
+        })
+    }
+    */
+
+
     val dificuldades = listOf("Fácil", "Médio", "Difícil")
 
     val context = LocalContext.current
@@ -89,9 +120,7 @@ fun TelaReceita(navController: NavController?) {
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState,
-                // REMOVIDO: .align(Alignment.Center)
-                modifier = Modifier
-                    .padding(16.dp), // Apenas padding, o alinhamento é tratado pelo Scaffold ou Box pai se houver
+                modifier = Modifier.padding(16.dp),
                 snackbar = { data ->
                     Snackbar(
                         containerColor = Color(0xFFFFC56C),
@@ -264,7 +293,7 @@ fun TelaReceita(navController: NavController?) {
                                 text = { Text(text = item.nome, color = Color.White) },
                                 onClick = {
                                     categoriaNomeSelecionada.value = item.nome
-                                    categoriaIdSelecionada.intValue = item.id_classificacao
+                                    categoriaIdSelecionada.intValue = item.id // Pega o 'id' do ClassificacaoReceita
                                     expanded.value = false
                                 }
                             )
@@ -355,7 +384,7 @@ fun TelaReceita(navController: NavController?) {
                                 || modo_preparo.value.isBlank()
                                 || dificuldade.value.isBlank()
                                 || tempo_preparo.value.isBlank()
-                                || categoriaIdSelecionada.intValue == 0
+                                || categoriaIdSelecionada.intValue == 0 // Verifica se uma categoria foi selecionada
                                 || imageUri.value == null
                             ) {
                                 scope.launch {
@@ -381,8 +410,15 @@ fun TelaReceita(navController: NavController?) {
                                     }
 
                                     val currentDateTime = LocalDateTime.now()
-                                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                                    // Formato de data/hora mais comum para APIs (ISO 8601)
+                                    val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
                                     val formattedDate = currentDateTime.format(formatter)
+
+                                    // **CORREÇÃO AQUI**
+                                    // Criando o objeto ClassificacaoReceita com o idClassificacao
+                                    val classificacaoParaEnvio = ClassificacaoReceita(
+                                        idClassificacao = categoriaIdSelecionada.intValue
+                                    )
 
                                     val receitaParaBackend = Receita(
                                         id_receita = null,
@@ -394,10 +430,10 @@ fun TelaReceita(navController: NavController?) {
                                         dificuldade = dificuldade.value,
                                         id_usuario = userId,
                                         data_publicacao = formattedDate,
-                                        classificacao = listOf(categoriaIdSelecionada.intValue),
+                                        // Agora o tipo corresponde: List<ClassificacaoReceita>
+                                        classificacao = listOf(classificacaoParaEnvio),
                                         classificacao_nome = null,
-                                        usuario = null,
-                                        classificacoes_detalhe = null
+                                        usuario = null
                                     )
 
                                     val call = RetrofitFactory()
@@ -412,10 +448,11 @@ fun TelaReceita(navController: NavController?) {
                                             isLoading.value = false
                                             if (response.isSuccessful) {
                                                 scope.launch {
-                                                    snackbarHostState.showSnackbar("Receita publicada com sucesso no seu backend!")
+                                                    snackbarHostState.showSnackbar("Receita publicada com sucesso!")
                                                 }
                                                 Log.i("TelaReceita", "Receita publicada com sucesso: ${response.body()}")
 
+                                                // Limpar campos após sucesso
                                                 titulo.value = ""
                                                 ingrediente.value = ""
                                                 modo_preparo.value = ""
@@ -426,6 +463,7 @@ fun TelaReceita(navController: NavController?) {
                                                 imageUri.value = null
 
                                                 navController?.navigate("home") {
+                                                    // Limpa a back stack para que o usuário não volte para a tela de publicação
                                                     popUpTo("tela_receita") { inclusive = true }
                                                 }
                                             } else {
@@ -459,7 +497,7 @@ fun TelaReceita(navController: NavController?) {
                         modifier = Modifier
                             .padding(top = 20.dp, bottom = 4.dp)
                             .width(130.dp),
-                        enabled = !isLoading.value
+                        enabled = !isLoading.value // Desabilita o botão enquanto estiver carregando
                     ) {
                         if (isLoading.value) {
                             CircularProgressIndicator(

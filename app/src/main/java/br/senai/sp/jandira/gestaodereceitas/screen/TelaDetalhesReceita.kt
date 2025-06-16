@@ -1,4 +1,4 @@
-package br.senai.sp.jandira.gestaodereceitas.screens // Correção: 'screens' no plural
+package br.senai.sp.jandira.gestaodereceitas.screens
 
 import android.util.Log
 import android.widget.Toast
@@ -70,7 +70,7 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
             override fun onResponse(call: Call<RespostaReceita>, response: Response<RespostaReceita>) {
                 isLoading = false
                 if (response.isSuccessful) {
-                    receita = response.body()?.receita // <<-- CORREÇÃO AQUI (se você alterou RespostaReceita)
+                    receita = response.body()?.receita
                     if (receita == null) {
                         errorMessage = "Receita não encontrada."
                     }
@@ -158,6 +158,10 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Imagem da Receita
+                        // Verificar se 'foto_receita' ou 'fotoUrl' é o nome correto da propriedade.
+                        // No modelo `Receita` que você me passou, o nome do campo é 'foto_receita'.
+                        // Se o backend estiver realmente enviando como 'fotoUrl', então ajuste no modelo Receita.
+                        // Mas, pelo seu último modelo de Receita, o nome é foto_receita.
                         currentReceita.fotoUrl.let { url ->
                             Image(
                                 painter = rememberAsyncImagePainter(model = url),
@@ -172,8 +176,8 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Classificação
-                        val classificacaoNome = currentReceita.classificacoes_detalhe?.firstOrNull()?.id_classificacao ?:
-                        currentReceita.classificacao_nome ?: "N/A"
+                        // Usar diretamente 'classificacao_nome' que já é a string do nome.
+                        val classificacaoNome = currentReceita.classificacao_nome ?: "N/A"
                         Text(
                             text = stringResource(R.string.classificacao_dois_pontos, classificacaoNome),
                             fontSize = 18.sp,

@@ -218,8 +218,8 @@ fun TelaHome(navController: NavController?) {
                         Button(
                             onClick = {
                                 // CORREÇÃO AQUI: Usar 'classificacao.id_classificacao'
-                                Log.d("TelaHome", "Filtro clicado: ${classificacao.nome} (ID: ${classificacao.id_classificacao})")
-                                fetchRecipes(null, classificacao.id_classificacao, null)
+                                Log.d("TelaHome", "Filtro clicado: ${classificacao.nome} (ID: ${classificacao.idClassificacao})")
+                                fetchRecipes(null, classificacao.idClassificacao, null)
                                 searchTerm = "" // Limpa o campo de pesquisa ao filtrar por categoria
                             },
                             shape = RoundedCornerShape(50),
@@ -292,9 +292,10 @@ fun TelaHome(navController: NavController?) {
 @Composable
 fun ReceitaCard(receita: Receita, classificacoesDisponiveis: List<ClassificacaoReceita>) {
     val classificacaoExibida = receita.classificacao_nome ?:
-    (receita.classificacao?.firstOrNull()?.let { id -> // `classificacao_ids` é nulável
-        // CORREÇÃO AQUI: Usar 'it.id_classificacao'
-        classificacoesDisponiveis.find { it.id_classificacao == id }?.nome
+    (receita.classificacao?.firstOrNull()?.let { classificacaoDoItemDaReceita -> // <-- Mudei o nome da variável para ser mais claro
+        // Agora, `classificacaoDoItemDaReceita` é do tipo `ClassificacaoReceita`
+        // Então, para acessar o ID, você usa classificacaoDoItemDaReceita.id_classificacao
+        classificacoesDisponiveis.find { it.idClassificacao == classificacaoDoItemDaReceita.idClassificacao }?.nome
     } ?: "N/A")
 
     Box(
