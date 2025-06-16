@@ -46,7 +46,8 @@ import br.senai.sp.jandira.gestaodereceitas.R
 import br.senai.sp.jandira.gestaodereceitas.model.Receita
 import br.senai.sp.jandira.gestaodereceitas.model.RespostaReceita
 import br.senai.sp.jandira.gestaodereceitas.service.RetrofitFactory
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -60,7 +61,7 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
 
     LaunchedEffect(idReceita) {
         if (idReceita == null || idReceita == 0) {
-            errorMessage = "ID da receita inválido."
+            errorMessage = context.getString(R.string.id_receita_invalido)
             isLoading = false
             return@LaunchedEffect
         }
@@ -72,13 +73,13 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
                 if (response.isSuccessful) {
                     receita = response.body()?.receita
                     if (receita == null) {
-                        errorMessage = "Receita não encontrada."
+                        errorMessage = context.getString(R.string.receita_nao_encontrada)
                     }
                     Log.d("DetalhesReceita", "Receita carregada: ${receita?.titulo}")
                 } else {
                     errorMessage = "Erro ao carregar detalhes da receita: ${response.code()} - ${response.errorBody()?.string()}"
                     Log.e("DetalhesReceita", errorMessage!!)
-                    Toast.makeText(context, "Erro ao carregar detalhes.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.erro_carregar_detalhes), Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -86,7 +87,7 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
                 isLoading = false
                 errorMessage = "Erro de conexão: ${t.localizedMessage}"
                 Log.e("DetalhesReceita", errorMessage!!, t)
-                Toast.makeText(context, "Erro de conexão ao carregar detalhes.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.erro_conexao_detalhes), Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -99,7 +100,7 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()) // Permite rolagem
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
             Row(
@@ -139,8 +140,8 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = errorMessage!!, color = Color.Red, fontSize = 18.sp)
                 }
-            } else { // Este bloco será executado se isLoading for false e errorMessage for null
-                receita?.let { currentReceita -> // <<-- Uso seguro de 'let' aqui
+            } else {
+                receita?.let { currentReceita ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -158,25 +159,46 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Imagem da Receita
-                        // Verificar se 'foto_receita' ou 'fotoUrl' é o nome correto da propriedade.
-                        // No modelo `Receita` que você me passou, o nome do campo é 'foto_receita'.
-                        // Se o backend estiver realmente enviando como 'fotoUrl', então ajuste no modelo Receita.
-                        // Mas, pelo seu último modelo de Receita, o nome é foto_receita.
-                        currentReceita.fotoUrl.let { url ->
-                            Image(
-                                painter = rememberAsyncImagePainter(model = url),
+                        // Modificação para exibir um placeholder se a URL da foto_receita for nula ou vazia
+                        if (!currentReceita.fotoUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(currentReceita.fotoUrl)
+                                    .crossfade(true)
+                                    .placeholder(R.drawable.logo) // Placeholder enquanto carrega
+                                    .error(R.drawable.avatar) // Imagem de erro se a URL falhar
+                                    .build(),
                                 contentDescription = stringResource(R.string.foto_da_receita),
+                                contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(200.dp)
-                                    .clip(RoundedCornerShape(12.dp)),
-                                contentScale = ContentScale.Crop
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color.LightGray)
                             )
+                        } else {
+                            // Exibe um Box com um ícone como placeholder se não houver foto_receita
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color.LightGray), // Cor de fundo para o placeholder
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image( // Usando Image com painterResource para um drawable local
+                                    painter = painterResource(id = R.drawable.logo), // Exemplo: Sua logo como fallback
+                                    contentDescription = stringResource(R.string.foto_da_receita),
+                                    modifier = Modifier.size(100.dp),
+                                    alpha = 0.5f // Deixa o ícone um pouco transparente
+                                )
+                                // Alternativamente, você pode usar um Text:
+                                // Text(text = "Foto indisponível", fontSize = 16.sp, color = Color.Gray)
+                            }
                         }
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Classificação
-                        // Usar diretamente 'classificacao_nome' que já é a string do nome.
                         val classificacaoNome = currentReceita.classificacao_nome ?: "N/A"
                         Text(
                             text = stringResource(R.string.classificacao_dois_pontos, classificacaoNome),
@@ -232,15 +254,23 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Publicado por
-                        val nomeUsuario = currentReceita.usuario?.nome_usuario ?: "Desconhecido" // <<-- Agora currentReceita é garantido não ser nulo
+                        val nomeUsuario = currentReceita.usuario?.nome_usuario ?: stringResource(R.string.desconhecido)
+                        val emailUsuario = currentReceita.usuario?.email ?: stringResource(R.string.desconhecido)
+
                         Text(
                             text = stringResource(R.string.publicado_por, nomeUsuario),
                             fontSize = 14.sp,
                             color = Color.Gray,
                             modifier = Modifier.align(Alignment.End)
                         )
+                        Text(
+                            text = stringResource(R.string.email_publicado_por, emailUsuario),
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.align(Alignment.End)
+                        )
                     }
-                } ?: run { // Este bloco 'else' do 'let' é executado se receita for null (após o carregamento e sem erro)
+                } ?: run {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(text = stringResource(R.string.nenhuma_receita_encontrada), fontSize = 18.sp, color = Color.Gray)
                     }

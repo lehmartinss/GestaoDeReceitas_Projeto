@@ -68,11 +68,12 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-    implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
     implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
     implementation("com.google.firebase:firebase-storage")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.7")
     implementation("com.google.firebase:firebase-analytics")
+    implementation("io.coil-kt:coil-compose:2.6.0") // Use a versão mais recente
+
 }

@@ -115,7 +115,7 @@ fun TelaPerfil(navController: NavController?) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Botão de voltar
+                    // Botão de voltardani
                     IconButton(
                         onClick = { navController?.navigate("home") },
                         modifier = Modifier.size(48.dp)

@@ -35,7 +35,7 @@ interface CadastroService {
     // Assumindo um endpoint como GET /v1/controle-receita/receita/all
     // Verifique o path real no seu backend se não for 'receita/all'
     @Headers("Content-Type: application/json")
-    @GET("receita/all") // Endpoint para listar todas as receitas
+    @GET("receita") // Endpoint para listar todas as receitas
     fun listarTodasReceitas(): Call<RespostaHome>
 
 
@@ -47,18 +47,15 @@ interface CadastroService {
     fun listarReceitasDoUsuario(@Path("id") id: Int): Call<RespostaHome>
 
 
-    // Método para buscar receitas por um termo (ex: no título, ingredientes)
-    // Assumindo um endpoint como: GET /v1/controle-receita/receita/buscar?termo=query
-    @Headers("Content-Type: application/json")
-    @GET("receita/buscar") // Endpoint para buscar receitas por termo
+    // **** PONTO CRÍTICO: VERIFIQUE ESTA LINHA ****
+    // Endpoint para buscar receitas por termo (barra de pesquisa)
+    @GET("/v1/controle-receita/search")
     fun buscarReceitas(@Query("termo") termo: String): Call<RespostaHome>
 
-
-    // Método para listar receitas por ID de Classificação
-    // Assumindo um endpoint como: GET /v1/controle-receita/receita/classificacao/{id}
-    @Headers("Content-Type: application/json")
-    @GET("receita/classificacao/{id}") // Endpoint para filtrar receitas por classificação
-    fun listarReceitaByClassificacao(@Path("id") idClassificacao: Int): Call<RespostaHome>
+    // **** PONTO CRÍTICO: VERIFIQUE ESTA LINHA ****
+    // Endpoint para listar receitas por ID de classificação (botões de filtro)
+    @GET("/v1/controle-receita/category/{idClassificacao}") // <--- ESSA ROTA DEVE SER EXATAMENTE IGUAL À DO BACKEND
+    fun listarReceitaByClassificacao(@Path("idClassificacao") idClassificacao: Int): Call<RespostaHome>
 
 
     // --- Métodos de Classificação ---
@@ -70,5 +67,6 @@ interface CadastroService {
     @Headers("Content-Type: application/json")
     @GET("receitas/{id}") // <<-- O endpoint da sua API para buscar uma receita por ID
     fun buscarReceitaPorId(@Path("id") idReceita: Int): Call<RespostaReceita>
+
 
 }

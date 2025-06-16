@@ -3,6 +3,7 @@ package br.senai.sp.jandira.gestaodereceitas.screens
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable // Importar o modificador clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,10 +54,9 @@ import androidx.navigation.NavController
 import br.senai.sp.jandira.gestaodereceitas.R
 import br.senai.sp.jandira.gestaodereceitas.model.ClassificacaoReceita
 import br.senai.sp.jandira.gestaodereceitas.model.Receita
-import br.senai.sp.jandira.gestaodereceitas.model.RespostaClassificacao // Importe seu modelo de resposta
-import br.senai.sp.jandira.gestaodereceitas.model.RespostaHome // Importe seu modelo de resposta
+import br.senai.sp.jandira.gestaodereceitas.model.RespostaClassificacao
+import br.senai.sp.jandira.gestaodereceitas.model.RespostaHome
 import br.senai.sp.jandira.gestaodereceitas.service.RetrofitFactory
-import br.senai.sp.jandira.gestaodereceitas.service.SharedPreferencesUtils
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
@@ -72,57 +72,42 @@ fun TelaHome(navController: NavController?) {
     var searchTerm by remember { mutableStateOf("") }
 
     val context = LocalContext.current
-    val userId = SharedPreferencesUtils.getUserId(context)
 
-    val fetchRecipes: (String?, Int?, Int?) -> Unit = { query, classificationId, currentUserId ->
+    val fetchRecipes: (String?, Int?) -> Unit = { query, classificationId ->
         val service = RetrofitFactory().getCadastroService()
         val call: Call<RespostaHome>
 
         if (query != null && query.isNotBlank()) {
             call = service.buscarReceitas(query)
             Log.d("TelaHome", "Buscando receitas por termo: '$query'")
-        }
-        else if (classificationId != null && classificationId != 0) {
+        } else if (classificationId != null && classificationId != 0) {
             call = service.listarReceitaByClassificacao(classificationId)
             Log.d("TelaHome", "Filtrando receitas por classificação ID: $classificationId")
-        }
-        else if (currentUserId != null && currentUserId != 0) {
-            call = service.listarReceitasDoUsuario(currentUserId)
-            Log.d("TelaHome", "Carregando receitas para o usuário ID: $currentUserId")
-        }
-        // 4. Se nenhuma das condições anteriores for atendida (nenhum termo, filtro ou ID de usuário),
-        //    lista todas as receitas como fallback.
-        else {
+        } else {
             call = service.listarTodasReceitas()
-            Log.d("TelaHome", "Nenhum critério de busca/filtro/usuário, listando todas as receitas.")
+            Log.d("TelaHome", "Carregando TODAS as receitas para a Tela Home.")
         }
 
         call.enqueue(object : Callback<RespostaHome> {
             override fun onResponse(call: Call<RespostaHome>, response: Response<RespostaHome>) {
                 if (response.isSuccessful) {
-                    // Acessa a lista de receitas através do campo 'receitasPublicadas'
                     receitasState = response.body()?.receitasPublicadas ?: emptyList()
                     Log.d("TelaHome", "Receitas carregadas/filtradas: ${receitasState.size}")
                 } else {
                     Log.e("TelaHome", "Erro ao carregar/filtrar receitas: ${response.code()} - ${response.errorBody()?.string()}")
-                    // TODO: Considere mostrar um Toast ou Snackbar de erro aqui.
                 }
             }
 
             override fun onFailure(call: Call<RespostaHome>, t: Throwable) {
                 Log.e("TelaHome", "Erro de rede ao carregar/filtrar receitas: ${t.message}")
-                // TODO: Considere mostrar um Toast ou Snackbar de erro de conexão aqui.
             }
         })
     }
 
-    // Efeito colateral para buscar dados iniciais (classificações e receitas do usuário)
     LaunchedEffect(Unit) {
-        // 1. Buscar todas as classificações disponíveis
         RetrofitFactory().getCadastroService().listarTodasClassificacoes().enqueue(object : Callback<RespostaClassificacao> {
             override fun onResponse(call: Call<RespostaClassificacao>, response: Response<RespostaClassificacao>) {
                 if (response.isSuccessful) {
-                    // Acessa a lista de classificações através do campo 'classificacoes'
                     classificacoesDisponiveis = response.body()?.classificacoes ?: emptyList()
                     Log.d("TelaHome", "Classificações carregadas: ${classificacoesDisponiveis.size}")
                 } else {
@@ -135,8 +120,7 @@ fun TelaHome(navController: NavController?) {
             }
         })
 
-        // 2. Buscar as receitas do usuário logado inicialmente
-        fetchRecipes(null, null, userId) // userId é recuperado no escopo do Composable
+        fetchRecipes(null, null)
     }
 
 
@@ -158,8 +142,12 @@ fun TelaHome(navController: NavController?) {
                         .size(60.dp)
                         .weight(0.2f)
                         .padding(end = 8.dp)
+                        .clickable {
+                            fetchRecipes(null, null)
+                            searchTerm = ""
+                            Log.d("TelaHome", "Logo clicada: Restaurando todas as receitas.")
+                        }
                 )
-                // Campo de pesquisa
                 OutlinedTextField(
                     value = searchTerm,
                     onValueChange = {
@@ -169,7 +157,7 @@ fun TelaHome(navController: NavController?) {
                     label = { Text(text = stringResource(R.string.pesquisar)) },
                     trailingIcon = {
                         IconButton(onClick = {
-                            fetchRecipes(searchTerm, null, null)
+                            fetchRecipes(searchTerm, null)
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Search,
@@ -208,7 +196,6 @@ fun TelaHome(navController: NavController?) {
                 }) {
                     Icon(imageVector = Icons.Default.ArrowBack, contentDescription = stringResource(R.string.voltar_categorias))
                 }
-                // Lista de categorias (classificações)
                 LazyRow(
                     state = listState,
                     modifier = Modifier.weight(1f),
@@ -217,22 +204,20 @@ fun TelaHome(navController: NavController?) {
                     items(classificacoesDisponiveis) { classificacao ->
                         Button(
                             onClick = {
-                                // CORREÇÃO AQUI: Usar 'classificacao.id_classificacao'
-                                Log.d("TelaHome", "Filtro clicado: ${classificacao.nome} (ID: ${classificacao.idClassificacao})")
-                                fetchRecipes(null, classificacao.idClassificacao, null)
-                                searchTerm = "" // Limpa o campo de pesquisa ao filtrar por categoria
+                                Log.d("TelaHome", "Filtro clicado: ${classificacao.nome} (ID: ${classificacao.id})")
+                                fetchRecipes(null, classificacao.id)
+                                searchTerm = ""
                             },
                             shape = RoundedCornerShape(50),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF982829)),
                             modifier = Modifier
-                                .height(32.dp)
-                                .width(IntrinsicSize.Min)
+                                .height(38.dp)
                         ) {
                             Text(
                                 text = classificacao.nome,
                                 color = Color.White,
                                 fontSize = 12.sp,
-                                maxLines = 1
+                                modifier = Modifier.padding(horizontal = 6.dp)
                             )
                         }
                     }
@@ -282,20 +267,28 @@ fun TelaHome(navController: NavController?) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(receitasState) { receita ->
-                    ReceitaCard(receita = receita, classificacoesDisponiveis = classificacoesDisponiveis)
+                    // **** ADIÇÃO IMPORTANTE AQUI: CHAMA A NAVEGAÇÃO AO CLICAR ****
+                    ReceitaCard(
+                        receita = receita,
+                        classificacoesDisponiveis = classificacoesDisponiveis,
+                        onClick = { clickedReceita ->
+                            // Navega para a TelaDetalhesReceita passando o ID da receita
+                            navController?.navigate("detalhes_receita/${clickedReceita.id_receita}")
+                        }
+                    )
+                    // ***************************************************************
                 }
             }
         }
     }
 }
 
+// **** MODIFICAÇÃO IMPORTANTE AQUI: ReceitaCard agora aceita um lambda onClick ****
 @Composable
-fun ReceitaCard(receita: Receita, classificacoesDisponiveis: List<ClassificacaoReceita>) {
+fun ReceitaCard(receita: Receita, classificacoesDisponiveis: List<ClassificacaoReceita>, onClick: (Receita) -> Unit) {
     val classificacaoExibida = receita.classificacao_nome ?:
-    (receita.classificacao?.firstOrNull()?.let { classificacaoDoItemDaReceita -> // <-- Mudei o nome da variável para ser mais claro
-        // Agora, `classificacaoDoItemDaReceita` é do tipo `ClassificacaoReceita`
-        // Então, para acessar o ID, você usa classificacaoDoItemDaReceita.id_classificacao
-        classificacoesDisponiveis.find { it.idClassificacao == classificacaoDoItemDaReceita.idClassificacao }?.nome
+    (receita.classificacao?.firstOrNull()?.let { classificacaoDoItemDaReceita ->
+        classificacoesDisponiveis.find { it.id == classificacaoDoItemDaReceita.idClassificacao }?.nome
     } ?: "N/A")
 
     Box(
@@ -304,6 +297,7 @@ fun ReceitaCard(receita: Receita, classificacoesDisponiveis: List<ClassificacaoR
             .padding(vertical = 6.dp)
             .background(Color.White, RoundedCornerShape(12.dp))
             .padding(16.dp)
+            .clickable { onClick(receita) } // <<-- Tornando o card clicável
     ) {
         Column {
             Text(text = receita.titulo, fontSize = 18.sp, color = Color(0xFF982829))
