@@ -64,9 +64,10 @@ interface CadastroService {
     @GET("classificacao/") // Endpoint para listar todas as classificações
     fun listarTodasClassificacoes(): Call<RespostaClassificacao>
 
+    // **** LINHA CORRIGIDA ****
+    // Endpoint para buscar uma receita por ID
     @Headers("Content-Type: application/json")
-    @GET("receitas/{id}") // <<-- O endpoint da sua API para buscar uma receita por ID
+    @GET("receitaid/{id}") // O endpoint da sua API para buscar uma receita por ID
     fun buscarReceitaPorId(@Path("id") idReceita: Int): Call<RespostaReceita>
-
 
 }

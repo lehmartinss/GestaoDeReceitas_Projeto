@@ -70,13 +70,24 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
             override fun onResponse(call: Call<RespostaReceita>, response: Response<RespostaReceita>) {
                 isLoading = false
                 if (response.isSuccessful) {
-                    receita = response.body()?.receita
+                    val responseBody = response.body()
+                    // **** MUDANÇA AQUI ****
+                    // Acesse a receita dentro do array 'items' da RespostaReceita
+                    receita = responseBody?.items?.firstOrNull() // Pega o primeiro item da lista
+                    Log.d("DetalhesReceita", "Resposta da API: $responseBody") // Log da resposta completa para depuração
+
                     if (receita == null) {
-                        errorMessage = context.getString(R.string.receita_nao_encontrada)
+                        // Se 'items' estiver vazio ou nulo, ou o primeiro item for nulo
+                        errorMessage = responseBody?.message ?: context.getString(R.string.receita_nao_encontrada) // Use a mensagem da API se disponível
+                        Log.d("DetalhesReceita", "Receita não encontrada: ${errorMessage}")
+                    } else {
+                        errorMessage = null // Limpa qualquer erro anterior se a receita for carregada com sucesso
+                        Log.d("DetalhesReceita", "Receita carregada: ${receita?.titulo}") //
                     }
-                    Log.d("DetalhesReceita", "Receita carregada: ${receita?.titulo}")
                 } else {
-                    errorMessage = "Erro ao carregar detalhes da receita: ${response.code()} - ${response.errorBody()?.string()}"
+                    // Trata erros HTTP (ex: 404, 500)
+                    val errorBodyString = response.errorBody()?.string()
+                    errorMessage = "Erro ao carregar detalhes da receita: ${response.code()} - ${errorBodyString}"
                     Log.e("DetalhesReceita", errorMessage!!)
                     Toast.makeText(context, context.getString(R.string.erro_carregar_detalhes), Toast.LENGTH_SHORT).show()
                 }
@@ -191,8 +202,6 @@ fun TelaDetalhesReceita(navController: NavController?, idReceita: Int?) {
                                     modifier = Modifier.size(100.dp),
                                     alpha = 0.5f // Deixa o ícone um pouco transparente
                                 )
-                                // Alternativamente, você pode usar um Text:
-                                // Text(text = "Foto indisponível", fontSize = 16.sp, color = Color.Gray)
                             }
                         }
                         Spacer(modifier = Modifier.height(16.dp))

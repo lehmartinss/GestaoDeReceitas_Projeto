@@ -3,7 +3,7 @@ package br.senai.sp.jandira.gestaodereceitas.model
 import com.google.gson.annotations.SerializedName
 
 data class Receita(
-    @SerializedName("id_receita") val id_receita: Int?, // Mudei de 'id' para 'id_receita' conforme o esperado
+    @SerializedName("id") val id_receita: Int?, // Mudei de 'id' para 'id_receita' conforme o esperado
     @SerializedName("titulo") val titulo: String,
     @SerializedName("tempo_preparo") val tempo_preparo: String,
     @SerializedName("foto_receita") val fotoUrl: String, // Mudei de 'foto_receita' para 'fotoUrl' para refletir a URL do Firebase
