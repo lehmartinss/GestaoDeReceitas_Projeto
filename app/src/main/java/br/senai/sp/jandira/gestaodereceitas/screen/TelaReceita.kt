@@ -275,8 +275,8 @@ fun TelaReceita(navController: NavController?) {
                         shape = RoundedCornerShape(12.dp),
                         textStyle = TextStyle.Default.copy(fontSize = 14.sp),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF325862),
-                            unfocusedContainerColor = Color(0xFF325862),
+                            focusedContainerColor = Color(0xFF325862), // Mantido como estava ou ajustado para sua cor da caixa
+                            unfocusedContainerColor = Color(0xFF325862), // Mantido como estava ou ajustado para sua cor da caixa
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
                             cursorColor = Color.White,
@@ -286,14 +286,15 @@ fun TelaReceita(navController: NavController?) {
                     )
                     ExposedDropdownMenu(
                         expanded = expanded.value,
-                        onDismissRequest = { expanded.value = false }
+                        onDismissRequest = { expanded.value = false },
+                        modifier = Modifier.background(Color(0xFF982829)) // Cor de fundo do menu
                     ) {
                         classificacoesDisponiveis.forEach { item ->
                             DropdownMenuItem(
                                 text = { Text(text = item.nome, color = Color.White) },
                                 onClick = {
                                     categoriaNomeSelecionada.value = item.nome
-                                    categoriaIdSelecionada.intValue = item.id // Pega o 'id' do ClassificacaoReceita
+                                    categoriaIdSelecionada.intValue = item.id
                                     expanded.value = false
                                 }
                             )
@@ -321,8 +322,8 @@ fun TelaReceita(navController: NavController?) {
                         shape = RoundedCornerShape(12.dp),
                         textStyle = TextStyle.Default.copy(fontSize = 14.sp),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF325862),
-                            unfocusedContainerColor = Color(0xFF325862),
+                            focusedContainerColor = Color(0xFF325862), // Mantido como estava ou ajustado para sua cor da caixa
+                            unfocusedContainerColor = Color(0xFF325862), // Mantido como estava ou ajustado para sua cor da caixa
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
                             cursorColor = Color.White,
@@ -332,7 +333,8 @@ fun TelaReceita(navController: NavController?) {
                     )
                     ExposedDropdownMenu(
                         expanded = dificuldadeExpandid.value,
-                        onDismissRequest = { dificuldadeExpandid.value = false }
+                        onDismissRequest = { dificuldadeExpandid.value = false },
+                        modifier = Modifier.background(Color(0xFF982829)) // Cor de fundo do menu
                     ) {
                         dificuldades.forEach { item ->
                             DropdownMenuItem(
