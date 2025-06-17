@@ -10,7 +10,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 class RetrofitFactory {
 
     // ALTERE A BASE_URL PARA ONDE COMEÇA A SUA API REALMENTE
-    private val BASE_URL = "http://192.168.15.12:8080/v1/controle-receita/" // <<< Mude AQUI!!!
+    private val BASE_URL = "http://192.168.15.9:8080/v1/controle-receita/" // <<< Mude AQUI!!!
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

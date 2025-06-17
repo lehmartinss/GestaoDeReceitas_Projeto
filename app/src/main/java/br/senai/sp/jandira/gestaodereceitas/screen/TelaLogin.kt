@@ -5,7 +5,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -19,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation // Importar para ocultar a senha
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,11 +28,12 @@ import br.senai.sp.jandira.gestaodereceitas.R
 import br.senai.sp.jandira.gestaodereceitas.model.Login
 import br.senai.sp.jandira.gestaodereceitas.model.LoginApiResponse
 import br.senai.sp.jandira.gestaodereceitas.service.RetrofitFactory
-import br.senai.sp.jandira.gestaodereceitas.service.SharedPreferencesUtils // Certifique-se de que este import está correto
+import br.senai.sp.jandira.gestaodereceitas.service.SharedPreferencesUtils
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import androidx.compose.foundation.shape.RoundedCornerShape // Certifique-se de que RoundedCornerShape está importado se ainda não estiver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -143,6 +144,8 @@ fun TelaLogin(navController: NavController?) {
                         keyboardType = KeyboardType.Password,
                         capitalization = KeyboardCapitalization.None
                     ),
+                    // ADIÇÃO PARA OCULTAR A SENHA
+                    visualTransformation = PasswordVisualTransformation(),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color(0xFF325862),
                         unfocusedContainerColor = Color(0xFF325862),

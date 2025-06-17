@@ -75,5 +75,8 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata:1.6.7")
     implementation("com.google.firebase:firebase-analytics")
     implementation("io.coil-kt:coil-compose:2.6.0") // Use a versão mais recente
+    // No bloco dependencies
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1")) // Use a versão mais recente, confira em firebase.google.com/docs/android/setup
+    implementation("com.google.firebase:firebase-storage-ktx")
 
 }
